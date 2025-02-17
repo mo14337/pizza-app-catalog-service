@@ -1,24 +1,6 @@
 import mongoose from "mongoose";
+import { Attribute, ICategory, PriceConfiguration } from "./category-types";
 
-interface PriceConfiguration {
-    [key: string]: {
-        priceType: "base" | "aditional";
-        availableOptions: string[];
-    };
-}
-
-interface Attribute {
-    name: string;
-    widgetType: "switch" | "radio";
-    defaultValue: string;
-    availableOptions: string[];
-}
-
-export interface ICategory {
-    name: string;
-    priceConfiguration: PriceConfiguration;
-    attributes: Attribute[];
-}
 const priceConfiguration = new mongoose.Schema<PriceConfiguration>({
     priceType: {
         type: String,
