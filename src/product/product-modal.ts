@@ -8,15 +8,16 @@ const attributeValueSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.Mixed,
     },
 });
+
 const priceConfigurationSchema = new mongoose.Schema({
     priceType: {
         type: String,
         required: true,
         enum: ["base", "aditional"],
-        availableOptions: {
-            type: Map,
-            of: Number,
-        },
+    },
+    availableOptions: {
+        type: Map,
+        of: Number, // ✅ Correctly defining a Map of numbers
     },
 });
 
@@ -36,7 +37,7 @@ const ProductSchema = new mongoose.Schema(
         },
         priceConfiguration: {
             type: Map,
-            of: priceConfigurationSchema,
+            of: priceConfigurationSchema, // ✅ This is correct
         },
         attributes: {
             type: [attributeValueSchema],

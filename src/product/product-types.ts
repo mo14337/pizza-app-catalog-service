@@ -1,13 +1,15 @@
 import { Request } from "express";
 
+interface priceConfiguration {
+    priceType: string;
+    availableOptions: Map<string, number>;
+}
+
 export interface Product {
     name: string;
     description: string;
     image: string;
-    priceConfiguration: {
-        priceType: string;
-        availableOptions: Map<string, number>;
-    };
+    priceConfiguration: Map<string, priceConfiguration>;
     attributes: {
         name: string;
         value: string | number;
