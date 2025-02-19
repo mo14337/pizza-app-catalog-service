@@ -72,7 +72,7 @@ export class CategoryController {
 
         res.json({ data: category });
     }
-    async getAllCatgeory(req: Request, res: Response, next: NextFunction) {
+    async getAllCatgeory(req: Request, res: Response) {
         const categories = await this.categoryService.getAllCatgeory();
         res.json({ data: categories });
     }
