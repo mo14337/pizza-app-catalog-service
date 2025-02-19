@@ -11,10 +11,10 @@ export default [
         .withMessage("Product description is required")
         .isString()
         .withMessage("Product description should be an string"),
-    body("image").custom((value, { req }) => {
-        if (!req.files) throw new Error("Image is required");
-        return true;
-    }),
+    // body("image").custom((value, { req }) => {
+    //     if (!req.files) throw new Error("Image is required");
+    //     return true;
+    // }),
     body("priceConfiguration")
         .exists()
         .withMessage("Price configuration is required"),
