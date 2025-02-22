@@ -14,7 +14,7 @@ export interface Product {
         name: string;
         value: string | number;
     }[];
-    tenantId: number;
+    tenantId: string;
     categoryId: string;
     isPublish: boolean;
 }

@@ -12,13 +12,8 @@ export class ProductService {
             .findByIdAndUpdate(id, product, { new: true })
             .exec();
     }
-    async findById(id: string) {
+    async getProductById(id: string): Promise<Product | null> {
         //find product
         return await productModal.findById(id);
-    }
-    async getProductImage(id: string) {
-        //find product
-        const product = await productModal.findById(id);
-        return product?.image;
     }
 }

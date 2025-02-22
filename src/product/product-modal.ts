@@ -43,7 +43,7 @@ const ProductSchema = new mongoose.Schema(
             type: [attributeValueSchema],
         },
         tenantId: {
-            type: Number,
+            type: String,
             required: true,
         },
         categoryId: {
