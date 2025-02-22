@@ -1,5 +1,9 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment */
-import { PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
+import {
+    DeleteObjectCommand,
+    PutObjectCommand,
+    S3Client,
+} from "@aws-sdk/client-s3";
 import { FileData, FileStorage } from "../types/storage";
 import config from "config";
 
@@ -23,8 +27,13 @@ export class S3Storage implements FileStorage {
         // @ts-ignore
         await this.client.send(new PutObjectCommand(objectParams));
     }
-    delete(): void {
-        throw new Error("Method not implemented.");
+    async delete(filename: string): Promise<void> {
+        const objectParams = {
+            Bucket: config.get("aws.bucket"),
+            Key: filename,
+        };
+        // @ts-ignore
+        await this.client.send(new DeleteObjectCommand(objectParams));
     }
     getObjectUrl(): string {
         throw new Error("Method not implemented.");

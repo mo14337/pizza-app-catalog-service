@@ -27,7 +27,7 @@ export class ProductController {
             fileData: image.data.buffer,
         });
 
-        const product = {
+        const updatProductData = {
             name: req.body.name,
             description: req.body.description,
             image: imageName,
@@ -42,7 +42,52 @@ export class ProductController {
             isPublish: req.body.isPublish,
         };
 
-        const newProduct = await this.productService.create(product);
+        const newProduct = await this.productService.create(updatProductData);
         return res.json({ data: newProduct._id });
+    }
+    async update(req: CreateProductRequest, res: Response, next: NextFunction) {
+        const result = validationResult(req);
+        if (!result.isEmpty()) {
+            return next(createHttpError(400, result.array()[0].msg as string));
+        }
+
+        const { productId } = req.params;
+        let imageName = "";
+        const oldImage = await this.productService.getProductImage(productId);
+        if (req.files?.image) {
+            const image = req.files.image as UploadedFile;
+            imageName = uuidv4();
+            await this.storage.upload({
+                filename: imageName,
+                fileData: image.data.buffer,
+            });
+            if (oldImage) {
+                await this.storage.delete(oldImage);
+            }
+        }
+
+        const updatProductData = {
+            name: req.body.name,
+            description: req.body.description,
+            image: imageName ? imageName : oldImage || "",
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+            priceConfiguration: JSON.parse(
+                req.body.priceConfiguration as unknown as string,
+            ),
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+            attributes: JSON.parse(req.body.attributes as unknown as string),
+            tenantId: req.body.tenantId,
+            categoryId: req.body.categoryId,
+            isPublish: req.body.isPublish,
+        };
+
+        const product = await this.productService.update(
+            productId,
+            updatProductData,
+        );
+        if (!product) {
+            return next(createHttpError(404, "Product not found"));
+        }
+        return res.json({ id: product._id });
     }
 }
