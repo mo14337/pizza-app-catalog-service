@@ -1,19 +1,62 @@
+import { AggregatePaginateResult } from "mongoose";
 import productModal from "./product-modal";
-import { Product } from "./product-types";
+import { Filter, PaginateQuery, Product } from "./product-types";
+import { paginationLables } from "../config/pagination";
 
 export class ProductService {
-    async create(product: Product) {
+    async create(product: Product): Promise<Product> {
         //create product
-        return await productModal.create(product);
+        return (await productModal.create(product)) as Product;
     }
     async update(id: string, product: Product) {
         //update product
-        return await productModal
+        return (await productModal
             .findByIdAndUpdate(id, product, { new: true })
-            .exec();
+            .exec()) as Product;
     }
     async getProductById(id: string): Promise<Product | null> {
         //find product
-        return await productModal.findById(id);
+        return (await productModal.findById(id)) as Product;
+    }
+    async getAllProducts(
+        q: string,
+        filters: Filter,
+        paginateQuery: PaginateQuery,
+    ): Promise<AggregatePaginateResult<Product>> {
+        const searchQyeryRegex = new RegExp(q || "", "i");
+        const matchQuery = {
+            ...filters,
+            name: searchQyeryRegex,
+        };
+        const aggregate = productModal.aggregate([
+            {
+                $match: matchQuery,
+            },
+            {
+                $lookup: {
+                    from: "categories",
+                    localField: "categoryId",
+                    foreignField: "_id",
+                    as: "category",
+                    pipeline: [
+                        {
+                            $project: {
+                                _id: 1,
+                                name: 1,
+                                priceConfiguration: 1,
+                                attributes: 1,
+                            },
+                        },
+                    ],
+                },
+            },
+            {
+                $unwind: "$category",
+            },
+        ]);
+        return await productModal.aggregatePaginate(aggregate, {
+            ...paginateQuery,
+            customLabels: paginationLables,
+        });
     }
 }

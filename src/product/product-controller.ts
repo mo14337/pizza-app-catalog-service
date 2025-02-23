@@ -3,11 +3,12 @@ import { validationResult } from "express-validator";
 import createHttpError from "http-errors";
 import { Logger } from "winston";
 import { ProductService } from "./product-service";
-import { CreateProductRequest } from "./product-types";
+import { CreateProductRequest, Filter } from "./product-types";
 import { FileStorage } from "../common/types/storage";
 import { v4 as uuidv4 } from "uuid";
 import { UploadedFile } from "express-fileupload";
 import { AuthRequest } from "../common/types";
+import mongoose from "mongoose";
 
 export class ProductController {
     constructor(
@@ -118,5 +119,35 @@ export class ProductController {
             return next(createHttpError(404, "Product not found"));
         }
         return res.json({ id: product._id });
+    }
+
+    async getAllProducts(req: CreateProductRequest, res: Response) {
+        const { q, tenantId, categoryId, isPublish } = req.query;
+        const filters: Filter = {};
+        if (isPublish === "true") {
+            filters.isPublish = true;
+        }
+        if (tenantId) {
+            filters.tenantId = tenantId as string;
+        }
+        if (
+            categoryId &&
+            mongoose.Types.ObjectId.isValid(categoryId as string)
+        ) {
+            filters.categoryId = new mongoose.Types.ObjectId(
+                categoryId as string,
+            );
+        }
+        const paginateQuery = {
+            page: req.query.page ? parseInt(req.query.page as string) : 1,
+            limit: req.query.limit ? parseInt(req.query.limit as string) : 10,
+        };
+
+        const products = await this.productService.getAllProducts(
+            q as string,
+            filters,
+            paginateQuery,
+        );
+        return res.json({ data: products });
     }
 }
