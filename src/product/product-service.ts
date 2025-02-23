@@ -15,8 +15,15 @@ export class ProductService {
             .exec()) as Product;
     }
     async getProductById(id: string): Promise<Product | null> {
-        //find product
+        //get product
         return (await productModal.findById(id)) as Product;
+    }
+
+    async deleteProductById(id: string): Promise<Product | null> {
+        //delete product
+        return (await productModal.findByIdAndDelete(id, {
+            new: true,
+        })) as Product;
     }
     async getAllProducts(
         q: string,

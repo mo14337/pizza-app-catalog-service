@@ -1,23 +1,23 @@
 import express from "express";
 import authenticate from "../common/middlewares/authenticate";
-import { ProductController } from "./product-controller";
 import { canAccess } from "../common/middlewares/canAccess";
 import { Roles } from "../common/constants";
-import productValidator from "./product-validator";
-import { ProductService } from "./product-service";
+import productValidator from "./topping-validator";
+import { ToppingService } from "./topping-service";
 import logger from "../config/logger";
 import fileUpload from "express-fileupload";
 import { asyncWraper } from "../common/utils/asyncWrapper";
 import { S3Storage } from "../common/services/S3Storage";
 import createHttpError from "http-errors";
-import updateProductValidator from "./updateProductValidator";
+import updateProductValidator from "./updateToppingValidator";
+import { ToppingController } from "./topping-controller";
 
 const router = express.Router();
 
-const productService = new ProductService();
+const toppingService = new ToppingService();
 const s3Storage = new S3Storage();
-const productController = new ProductController(
-    productService,
+const toppingController = new ToppingController(
+    toppingService,
     logger,
     s3Storage,
 );
@@ -35,11 +35,11 @@ router.post(
         },
     }),
     productValidator,
-    asyncWraper(productController.create.bind(productController)),
+    asyncWraper(toppingController.create.bind(toppingController)),
 );
 
 router.put(
-    "/:productId",
+    "/:toppingId",
     authenticate,
     canAccess([Roles.ADMIN, Roles.MANAGER]),
     fileUpload({
@@ -51,23 +51,24 @@ router.put(
         },
     }),
     updateProductValidator,
-    asyncWraper(productController.update.bind(productController)),
+    asyncWraper(toppingController.update.bind(toppingController)),
 );
 
 router.get(
     "/",
-    asyncWraper(productController.getAllProducts.bind(productController)),
+    asyncWraper(toppingController.getAllToppings.bind(toppingController)),
 );
+
 router.get(
     "/:productId",
-    asyncWraper(productController.getProduct.bind(productController)),
+    asyncWraper(toppingController.getTopping.bind(toppingController)),
 );
 
 router.delete(
     "/:productId",
     authenticate,
     canAccess([Roles.ADMIN, Roles.MANAGER]),
-    asyncWraper(productController.delete.bind(productController)),
+    asyncWraper(toppingController.delete.bind(toppingController)),
 );
 
 export default router;

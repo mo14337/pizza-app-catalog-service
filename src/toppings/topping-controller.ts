@@ -2,21 +2,20 @@ import { NextFunction, Response } from "express";
 import { validationResult } from "express-validator";
 import createHttpError from "http-errors";
 import { Logger } from "winston";
-import { ProductService } from "./product-service";
-import { CreateProductRequest, Filter, Product } from "./product-types";
+import { ToppingService } from "./topping-service";
+import { CreateToppingRequest, Filter, Topping } from "./topping-types";
 import { FileStorage } from "../common/types/storage";
 import { v4 as uuidv4 } from "uuid";
 import { UploadedFile } from "express-fileupload";
 import { AuthRequest } from "../common/types";
-import mongoose from "mongoose";
 
-export class ProductController {
+export class ToppingController {
     constructor(
-        private productService: ProductService,
+        private toppingService: ToppingService,
         private logger: Logger,
         private storage: FileStorage,
     ) {}
-    async create(req: CreateProductRequest, res: Response, next: NextFunction) {
+    async create(req: CreateToppingRequest, res: Response, next: NextFunction) {
         const result = validationResult(req);
         if (!result.isEmpty()) {
             return next(createHttpError(400, result.array()[0].msg as string));
@@ -29,36 +28,31 @@ export class ProductController {
             fileData: image.data.buffer,
         });
 
-        const updatProductData = {
+        const topping = {
             name: req.body.name,
-            description: req.body.description,
             image: imageName,
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-            priceConfiguration: JSON.parse(
-                req.body.priceConfiguration as unknown as string,
-            ),
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-            attributes: JSON.parse(req.body.attributes as unknown as string),
             tenantId: req.body.tenantId,
-            categoryId: req.body.categoryId,
             isPublish: req.body.isPublish,
+            price: req.body.price,
         };
-
-        const newProduct = await this.productService.create(updatProductData);
-        return res.json({ data: newProduct._id });
+        const newTopping: Topping = await this.toppingService.create(topping);
+        if (!newTopping) {
+            return next(createHttpError(500, "Failed to create topping"));
+        }
+        return res.json({ data: newTopping._id });
     }
 
-    async update(req: CreateProductRequest, res: Response, next: NextFunction) {
+    async update(req: CreateToppingRequest, res: Response, next: NextFunction) {
         const result = validationResult(req);
         if (!result.isEmpty()) {
             return next(createHttpError(400, result.array()[0].msg as string));
         }
 
-        const { productId } = req.params;
-        const fetchedProduct =
-            await this.productService.getProductById(productId);
+        const { toppingId } = req.params;
+        const fetchedTopping =
+            await this.toppingService.getToppingById(toppingId);
 
-        if (!fetchedProduct) {
+        if (!fetchedTopping) {
             return next(createHttpError(404, "Product not found"));
         }
         if (
@@ -73,7 +67,7 @@ export class ProductController {
             );
         }
         const tennantId = (req as AuthRequest)?.auth?.tenant;
-        if (fetchedProduct.tenantId !== String(tennantId)) {
+        if (fetchedTopping.tenantId !== String(tennantId)) {
             return next(
                 createHttpError(
                     403,
@@ -83,7 +77,7 @@ export class ProductController {
         }
 
         let imageName = "";
-        const oldImage = fetchedProduct.image;
+        const oldImage = fetchedTopping.image;
         if (req.files?.image) {
             const image = req.files.image as UploadedFile;
             imageName = uuidv4();
@@ -96,33 +90,26 @@ export class ProductController {
             }
         }
 
-        const updatProductData = {
+        const updateTopping = {
             name: req.body.name,
-            description: req.body.description,
-            image: imageName ? imageName : oldImage || "",
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-            priceConfiguration: JSON.parse(
-                req.body.priceConfiguration as unknown as string,
-            ),
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-            attributes: JSON.parse(req.body.attributes as unknown as string),
+            image: imageName || oldImage,
+            price: req.body.price,
             tenantId: req.body.tenantId,
-            categoryId: req.body.categoryId,
             isPublish: req.body.isPublish,
         };
 
-        const product = await this.productService.update(
-            productId,
-            updatProductData,
+        const topping = await this.toppingService.update(
+            toppingId,
+            updateTopping,
         );
-        if (!product) {
+        if (!topping) {
             return next(createHttpError(404, "Product not found"));
         }
-        return res.json({ id: product._id });
+        return res.json({ id: topping._id });
     }
 
-    async getAllProducts(req: CreateProductRequest, res: Response) {
-        const { q, tenantId, categoryId, isPublish } = req.query;
+    async getAllToppings(req: CreateToppingRequest, res: Response) {
+        const { q, tenantId, isPublish } = req.query;
         const filters: Filter = {};
         if (isPublish === "true") {
             filters.isPublish = true;
@@ -130,25 +117,18 @@ export class ProductController {
         if (tenantId) {
             filters.tenantId = tenantId as string;
         }
-        if (
-            categoryId &&
-            mongoose.Types.ObjectId.isValid(categoryId as string)
-        ) {
-            filters.categoryId = new mongoose.Types.ObjectId(
-                categoryId as string,
-            );
-        }
+
         const paginateQuery = {
             page: req.query.page ? parseInt(req.query.page as string) : 1,
             limit: req.query.limit ? parseInt(req.query.limit as string) : 10,
         };
 
-        const products = await this.productService.getAllProducts(
+        const toppings = await this.toppingService.getAllToppings(
             q as string,
             filters,
             paginateQuery,
         );
-        if (!Array.isArray(products.data)) {
+        if (!Array.isArray(toppings.data)) {
             return res.json({
                 data: [],
                 total: 0,
@@ -157,30 +137,31 @@ export class ProductController {
             });
         }
 
-        const finalProduct = products?.data?.map((product: Product) => {
+        const finalToppings = toppings?.data?.map((product: Topping) => {
             return {
                 ...product,
                 image: this.storage.getObjectUrl(product.image),
             };
         });
         return res.json({
-            data: finalProduct,
-            total: products.total,
-            pageSize: products.pageSize,
-            currentPage: products.currentPage,
+            data: finalToppings,
+            total: toppings.total,
+            pageSize: toppings.pageSize,
+            currentPage: toppings.currentPage,
         });
     }
-    async getProduct(req: CreateProductRequest, res: Response) {
-        const { productId } = req.params;
-        const fetchedProduct =
-            await this.productService.getProductById(productId);
-        return res.json({ data: fetchedProduct });
+
+    async getTopping(req: CreateToppingRequest, res: Response) {
+        const { toppingId } = req.params;
+        const fetchedTopping =
+            await this.toppingService.getToppingById(toppingId);
+        return res.json({ data: fetchedTopping });
     }
 
-    async delete(req: CreateProductRequest, res: Response) {
-        const { productId } = req.params;
-        const deletedProduct =
-            await this.productService.deleteProductById(productId);
-        return res.json({ id: deletedProduct?._id });
+    async delete(req: CreateToppingRequest, res: Response) {
+        const { toppingId } = req.params;
+        const deletedTopping =
+            await this.toppingService.deleteToppingById(toppingId);
+        return res.json({ data: deletedTopping?._id });
     }
 }
