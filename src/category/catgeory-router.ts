@@ -42,8 +42,6 @@ router.get(
 );
 router.get(
     "/",
-    authenticate,
-    canAccess([Roles.ADMIN]),
     categoryValidator,
     asyncWraper(categoryController.getAllCatgeory.bind(categoryController)),
 );

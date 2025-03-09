@@ -73,7 +73,7 @@ export class ProductController {
             );
         }
         const tennantId = (req as AuthRequest)?.auth?.tenant;
-        if (fetchedProduct.tenantId !== String(tennantId)) {
+        if (tennantId && fetchedProduct.tenantId !== String(tennantId)) {
             return next(
                 createHttpError(
                     403,
@@ -139,8 +139,12 @@ export class ProductController {
             );
         }
         const paginateQuery = {
-            page: req.query.page ? parseInt(req.query.page as string) : 1,
-            limit: req.query.limit ? parseInt(req.query.limit as string) : 10,
+            page: req.query.currentPage
+                ? parseInt(req.query.currentPage as string)
+                : 1,
+            limit: req.query.perPage
+                ? parseInt(req.query.perPage as string)
+                : 10,
         };
 
         const products = await this.productService.getAllProducts(
