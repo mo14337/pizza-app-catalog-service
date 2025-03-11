@@ -18,12 +18,14 @@ export class CategoryController {
             return next(createHttpError(400, result.array()[0].msg as string));
         }
 
-        const { name, priceConfiguration, attributes } = req.body as ICategory;
+        const { name, priceConfiguration, attributes, hasToppings } =
+            req.body as ICategory;
 
         const category = await this.categoryService.create({
             name,
             priceConfiguration,
             attributes,
+            hasToppings,
         });
 
         this.logger.info("Created category", { id: category._id });
@@ -42,12 +44,14 @@ export class CategoryController {
             return next(createHttpError(400, "Invalid category ID"));
         }
 
-        const { name, priceConfiguration, attributes } = req.body as ICategory;
+        const { name, priceConfiguration, attributes, hasToppings } =
+            req.body as ICategory;
 
         const category = await this.categoryService.update(categoryId, {
             name,
             priceConfiguration,
             attributes,
+            hasToppings,
         });
 
         if (!category) {

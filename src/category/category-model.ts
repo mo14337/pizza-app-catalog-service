@@ -47,6 +47,10 @@ const CategorySchema = new mongoose.Schema<ICategory>(
             type: [attributeSchema],
             required: true,
         },
+        hasToppings: {
+            type: Boolean,
+            default: false,
+        },
     },
     {
         timestamps: true,
