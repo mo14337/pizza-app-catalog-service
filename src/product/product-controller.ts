@@ -9,12 +9,14 @@ import { v4 as uuidv4 } from "uuid";
 import { UploadedFile } from "express-fileupload";
 import { AuthRequest } from "../common/types";
 import mongoose from "mongoose";
+import { MessageProducerBroker } from "../common/types/broker";
 
 export class ProductController {
     constructor(
         private productService: ProductService,
         private logger: Logger,
         private storage: FileStorage,
+        private broker: MessageProducerBroker,
     ) {}
     async create(req: CreateProductRequest, res: Response, next: NextFunction) {
         const result = validationResult(req);
@@ -45,6 +47,15 @@ export class ProductController {
         };
 
         const newProduct = await this.productService.create(updatProductData);
+        //send product to kafka
+        await this.broker.sendMessages(
+            "product",
+            JSON.stringify({
+                _id: newProduct?._id,
+                priceConfiguration: newProduct?.priceConfiguration,
+            }),
+        );
+
         return res.json({ data: newProduct._id });
     }
 

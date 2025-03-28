@@ -11,15 +11,21 @@ import { asyncWraper } from "../common/utils/asyncWrapper";
 import { S3Storage } from "../common/services/S3Storage";
 import createHttpError from "http-errors";
 import updateProductValidator from "./updateProductValidator";
+import { KafkaProducerBroker } from "../config/kafka";
+import config from "config";
 
 const router = express.Router();
 
 const productService = new ProductService();
 const s3Storage = new S3Storage();
+const messageProducerBroker = new KafkaProducerBroker("catalogue-service", [
+    config.get("kafka.brokers"),
+]);
 const productController = new ProductController(
     productService,
     logger,
     s3Storage,
+    messageProducerBroker,
 );
 
 router.post(
