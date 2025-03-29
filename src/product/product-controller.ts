@@ -126,6 +126,13 @@ export class ProductController {
             productId,
             updatProductData,
         );
+        await this.broker.sendMessages(
+            "product",
+            JSON.stringify({
+                _id: product?._id,
+                priceConfiguration: product?.priceConfiguration,
+            }),
+        );
         if (!product) {
             return next(createHttpError(404, "Product not found"));
         }
