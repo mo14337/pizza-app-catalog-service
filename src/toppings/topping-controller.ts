@@ -8,12 +8,14 @@ import { FileStorage } from "../common/types/storage";
 import { v4 as uuidv4 } from "uuid";
 import { UploadedFile } from "express-fileupload";
 import { AuthRequest } from "../common/types";
+import { MessageProducerBroker } from "../common/types/broker";
 
 export class ToppingController {
     constructor(
         private toppingService: ToppingService,
         private logger: Logger,
         private storage: FileStorage,
+        private broker: MessageProducerBroker,
     ) {}
     async create(req: CreateToppingRequest, res: Response, next: NextFunction) {
         const result = validationResult(req);
@@ -39,6 +41,14 @@ export class ToppingController {
         if (!newTopping) {
             return next(createHttpError(500, "Failed to create topping"));
         }
+        await this.broker.sendMessages(
+            "topping",
+            JSON.stringify({
+                _id: newTopping._id,
+                price: newTopping.price,
+                tenantId: newTopping.tenantId,
+            }),
+        );
         return res.json({ data: newTopping._id });
     }
 
@@ -101,6 +111,14 @@ export class ToppingController {
         const topping = await this.toppingService.update(
             toppingId,
             updateTopping,
+        );
+        await this.broker.sendMessages(
+            "topping",
+            JSON.stringify({
+                _id: topping._id,
+                price: topping.price,
+                tenantId: topping.tenantId,
+            }),
         );
         if (!topping) {
             return next(createHttpError(404, "Product not found"));

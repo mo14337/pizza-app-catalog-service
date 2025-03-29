@@ -11,15 +11,18 @@ import { S3Storage } from "../common/services/S3Storage";
 import createHttpError from "http-errors";
 import updateProductValidator from "./updateToppingValidator";
 import { ToppingController } from "./topping-controller";
+import { createMessageProducerBroker } from "../common/factories/brokerFactory";
 
 const router = express.Router();
 
 const toppingService = new ToppingService();
 const s3Storage = new S3Storage();
+const messageProducerBroker = createMessageProducerBroker();
 const toppingController = new ToppingController(
     toppingService,
     logger,
     s3Storage,
+    messageProducerBroker,
 );
 
 router.post(
