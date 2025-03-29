@@ -1,7 +1,7 @@
 import app from "./app";
+import { createMessageProducerBroker } from "./common/factories/brokerFactory";
 import { MessageProducerBroker } from "./common/types/broker";
 import { initDb } from "./config/db";
-import { KafkaProducerBroker } from "./config/kafka";
 import logger from "./config/logger";
 import config from "config";
 
@@ -10,10 +10,7 @@ const startServer = async () => {
     let messageProducerBroker: MessageProducerBroker | null = null;
     try {
         await initDb();
-        messageProducerBroker = new KafkaProducerBroker("catalogue-service", [
-            config.get("kafka.brokers"),
-        ]);
-        await messageProducerBroker.connect();
+        messageProducerBroker = await createMessageProducerBroker();
         app.listen(PORT, () => logger.info(`Listening on port ${PORT}`));
     } catch (err: unknown) {
         if (messageProducerBroker) {
