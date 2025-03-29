@@ -10,7 +10,8 @@ const startServer = async () => {
     let messageProducerBroker: MessageProducerBroker | null = null;
     try {
         await initDb();
-        messageProducerBroker = await createMessageProducerBroker();
+        messageProducerBroker = createMessageProducerBroker();
+        await messageProducerBroker.connect();
         app.listen(PORT, () => logger.info(`Listening on port ${PORT}`));
     } catch (err: unknown) {
         if (messageProducerBroker) {
