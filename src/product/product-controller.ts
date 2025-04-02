@@ -10,6 +10,7 @@ import { UploadedFile } from "express-fileupload";
 import { AuthRequest } from "../common/types";
 import mongoose from "mongoose";
 import { MessageProducerBroker } from "../common/types/broker";
+import { mapToObject } from "../utils";
 
 export class ProductController {
     constructor(
@@ -52,7 +53,7 @@ export class ProductController {
             "product",
             JSON.stringify({
                 _id: newProduct?._id,
-                priceConfiguration: newProduct?.priceConfiguration,
+                priceConfiguration: mapToObject(newProduct?.priceConfiguration),
             }),
         );
 
@@ -130,7 +131,7 @@ export class ProductController {
             "product",
             JSON.stringify({
                 _id: product?._id,
-                priceConfiguration: product?.priceConfiguration,
+                priceConfiguration: mapToObject(product?.priceConfiguration),
             }),
         );
         if (!product) {
