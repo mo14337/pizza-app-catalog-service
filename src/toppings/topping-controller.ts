@@ -121,7 +121,7 @@ export class ToppingController {
             }),
         );
         if (!topping) {
-            return next(createHttpError(404, "Product not found"));
+            return next(createHttpError(404, "Topping not found"));
         }
         return res.json({ id: topping._id });
     }
