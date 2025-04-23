@@ -7,7 +7,7 @@ import { CreateToppingRequest, Filter, Topping } from "./topping-types";
 import { FileStorage } from "../common/types/storage";
 import { v4 as uuidv4 } from "uuid";
 import { UploadedFile } from "express-fileupload";
-import { AuthRequest } from "../common/types";
+import { AuthRequest, ToppingEvents } from "../common/types";
 import { MessageProducerBroker } from "../common/types/broker";
 
 export class ToppingController {
@@ -41,13 +41,14 @@ export class ToppingController {
         if (!newTopping) {
             return next(createHttpError(500, "Failed to create topping"));
         }
+        const brokerMessage = {
+            event_type: ToppingEvents.TOPPING_CREATE,
+            data: newTopping,
+        };
         await this.broker.sendMessages(
             "topping",
-            JSON.stringify({
-                _id: newTopping._id,
-                price: newTopping.price,
-                tenantId: newTopping.tenantId,
-            }),
+            JSON.stringify(brokerMessage),
+            newTopping._id?.toString(),
         );
         return res.json({ data: newTopping._id });
     }
@@ -112,13 +113,14 @@ export class ToppingController {
             toppingId,
             updateTopping,
         );
+        const brokerMessage = {
+            event_type: ToppingEvents.TOPPING_CREATE,
+            data: topping,
+        };
         await this.broker.sendMessages(
             "topping",
-            JSON.stringify({
-                _id: topping._id,
-                price: topping.price,
-                tenantId: topping.tenantId,
-            }),
+            JSON.stringify(brokerMessage),
+            topping._id?.toString(),
         );
         if (!topping) {
             return next(createHttpError(404, "Topping not found"));
