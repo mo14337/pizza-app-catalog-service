@@ -7,10 +7,9 @@ import { CreateProductRequest, Filter, Product } from "./product-types";
 import { FileStorage } from "../common/types/storage";
 import { v4 as uuidv4 } from "uuid";
 import { UploadedFile } from "express-fileupload";
-import { AuthRequest } from "../common/types";
+import { AuthRequest, ProductEvents } from "../common/types";
 import mongoose from "mongoose";
 import { MessageProducerBroker } from "../common/types/broker";
-import { mapToObject } from "../utils";
 
 export class ProductController {
     constructor(
@@ -48,13 +47,15 @@ export class ProductController {
         };
 
         const newProduct = await this.productService.create(updatProductData);
+        const brokerMessage = {
+            event_type: ProductEvents.PRODUCT_UPDATE,
+            data: newProduct,
+        };
         //send product to kafka
         await this.broker.sendMessages(
             "product",
-            JSON.stringify({
-                _id: newProduct?._id,
-                priceConfiguration: mapToObject(newProduct?.priceConfiguration),
-            }),
+            JSON.stringify(brokerMessage),
+            newProduct._id?.toString(),
         );
 
         return res.json({ data: newProduct._id });
@@ -127,12 +128,14 @@ export class ProductController {
             productId,
             updatProductData,
         );
+        const brokerMessage = {
+            event_type: ProductEvents.PRODUCT_UPDATE,
+            data: product,
+        };
         await this.broker.sendMessages(
             "product",
-            JSON.stringify({
-                _id: product?._id,
-                priceConfiguration: mapToObject(product?.priceConfiguration),
-            }),
+            JSON.stringify(brokerMessage),
+            product._id?.toString(),
         );
         if (!product) {
             return next(createHttpError(404, "Product not found"));

@@ -28,10 +28,14 @@ export class KafkaProducerBroker implements MessageProducerBroker {
      * @throws {Error} - if the message is not sent successfully
      */
 
-    async sendMessages(topic: string, message: string) {
+    async sendMessages(topic: string, message: string, key?: string) {
+        const data: { value: string; key?: string } = { value: message };
+        if (key) {
+            data.key = key;
+        }
         await this.producer.send({
             topic: topic,
-            messages: [{ value: message }],
+            messages: [data],
         });
     }
 }
