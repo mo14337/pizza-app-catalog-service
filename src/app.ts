@@ -5,11 +5,16 @@ import productRouter from "./product/product-router";
 import cookieParser from "cookie-parser";
 import toppingRouter from "./toppings/topping-router";
 import cors from "cors";
+import config from "config";
 
 const app = express();
+const allowedOrigins = [
+    config.get("frontend.client"),
+    config.get("frontend.admin"),
+];
 app.use(
     cors({
-        origin: ["http://localhost:5173", "http://localhost:3000"],
+        origin: allowedOrigins as string[],
         credentials: true,
     }),
 );
