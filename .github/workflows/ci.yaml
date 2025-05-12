@@ -14,7 +14,7 @@ jobs:
         runs-on: ubuntu-latest
         if: github.ref == 'refs/heads/main' && github.event_name == 'push'
         env:
-            IMAGE_NAME: mohit14336/mern-pizza-app-auth-service
+            IMAGE_NAME: mohit14336/mern-pizza-app-catalog-service
             IMAGE_TAG: build-${{ github.run_number }}
         steps:
             - name: Checkout Repository
